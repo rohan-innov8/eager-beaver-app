@@ -2,22 +2,20 @@ import { GoogleGenAI } from "@google/genai";
 import { Project, Task } from "../types";
 
 export const generateDailyReport = async (projects: Project[], tasks: Task[]): Promise<string> => {
-  // Support both standard process.env (Node/Webpack) and import.meta.env (Vite)
-  // The deploy.yml uses VITE_API_KEY, so we must check for that.
-  const apiKey = process.env.API_KEY || (import.meta as any).env?.VITE_API_KEY;
-  
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
   if (!apiKey) {
-    console.error("API Key missing. Checked process.env.API_KEY and import.meta.env.VITE_API_KEY");
-    return "Error: API Key not configured. Please check your environment variables.";
+    console.error("API Key missing. Checked import.meta.env.VITE_GEMINI_API_KEY");
+    return "Error: Gemini API Key not configured in .env.local.";
   }
 
   const ai = new GoogleGenAI({ apiKey });
-  
+
   // Prepare data summary for the prompt
   const totalProjects = projects.length;
   const newProjects = projects.filter(p => p.stage === 'New').length; // Simplified "New" logic
   const totalTasks = tasks.length;
-  
+
   const projectSummaries = projects.map(p => {
     const daysLeft = Math.ceil((new Date(p.deadline).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
     return `- Project: ${p.name} (${p.stage}). Designer: ${p.designer}. Days Left: ${daysLeft}. Notes: ${p.notes.substring(0, 50)}...`;
